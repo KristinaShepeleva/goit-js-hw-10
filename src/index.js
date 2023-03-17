@@ -3,88 +3,69 @@ import Notiflix from 'notiflix';
 import './css/styles.css';
 import { fetchCountries } from './fetchCountries';
 
-
-
 const DEBOUNCE_DELAY = 300;
 
 const input = document.querySelector("#search-box");
 const list = document.querySelector(".country-list");
 const div = document.querySelector(".country-info");
 
- input.addEventListener('input', debounce(onInputSearch, DEBOUNCE_DELAY))
+input.addEventListener('input', debounce(onInputSearch, DEBOUNCE_DELAY))
 
- let searchCountryName = '';
-
-// function onInputSearch(e) {
-//     searchCountryName = input.value.trim();
-//     console.log(searchCountryName);
-    
-//     fetchCountries(searchCountryName)
-//         .then(console.log(fetchCountries(searchCountryName)))
-//         .catch(error => console.log(error))
-//         .finally(() => input.reset());
-
-
-
-//     //if (searchCountryName) {
-//     //    return fetchCountries(searchCountryName)
-//     //}
-      
-
-// }
-
-
-
-function onInputSearch() {
-    searchCountryName = input.value.trim();
-    if (searchCountryName === '') {
-        clearAll();
-        return;
-    } else fetchCountries(searchCountryName).then(countryNames => {
-        if (countryNames.length < 2) {
-            createCountrieCard(countryNames);
-            Notiflix.Notify.success('Here your result');
-        } else if (countryNames.length < 10 && countryNames.length > 1) {
-            createCountrieList(countryNames);
-            Notiflix.Notify.success('Here your results');
-        } else {
-            clearAll();
-            Notiflix.Notify.info('Too many matches found. Please enter a more specific name.');
-        };
-    })
-        .catch(() => {
-        clearAll();
-        Notiflix.Notify.failure('Oops, there is no country with that name.');
-    });
+function onInputSearch(e) {
+    let searchCountryName = e.target.value.trim();
+    if (searchCountryName) {
+        return fetchCountries(searchCountryName).then(countries => {
+            if (countries.length === 1) {
+                createCountrieCard(countries);
+                Notiflix.Notify.success('Here your result');
+            }
+            else if (countries.length <= 10 && countries.length > 1) {
+                createCountrieList(countries);
+                Notiflix.Notify.success('Here your results');
+            }
+            else {
+                clearMarkup();
+                Notiflix.Notify.info('Too many matches found. Please enter a more specific name.');
+            };
+        }).catch(() => {
+                clearMarkup();
+                Notiflix.Notify.failure('Oops, there is no country with that name.');
+            })
+    }
 };
 
-function createCountrieCard(country) {
-    clearAll();
-    const c = country[0];
-    const readyCard = `<div class="country-card">
+function createCountrieCard(countries) {
+   clearMarkup();
+    const country = countries[0];
+    const markupCard = `<div class="country-card">
         <div class="country-card--header">
-            <img src="${c.flags.svg}" alt="Country flag" width="55", height="35">
-            <h2 class="country-card--name"> ${c.name.official}</h2>
+            <img src="${country.flags.svg}" alt="Country flag" width="55", height="35">
+            <h2 class="country-card--name"> ${country.name.official}</h2>
         </div>
-            <p class="country-card--field">Capital: <span class="country-value">${c.capital}</span></p>
-            <p class="country-card--field">Population: <span class="country-value">${c.population}</span></p>
-            <p class="country-card--field">Languages: <span class="country-value">${Object.values(c.languages).join(',')}</span></p>
+        <ul>
+            <li class="country-card--field">Capital: <span class="country-value">${country.capital}</span></li>
+            <li class="country-card--field">Population: <span class="country-value">${country.population}</span></li>
+            <li class="country-card--field">Languages: <span class="country-value">${Object.values(country.languages).join(',')}</span></li>
+             </ul>
     </div>`
-    div.innerHTML = readyCard;
+    div.innerHTML = markupCard;
 };
 
-function createCountrieList(country) {
-    clearAll();
-    const readyList = country.map(({c}) => 
-        `<li class="country-list--item">
-            <img src="${c.flags.svg}" alt="Country flag" width="40", height="30">
-            <span class="country-list--name">${c.name.official}</span>
-        </li>`)
-        .join("");
-    list.insertAdjacentHTML('beforeend', readyList);
+function createCountrieList(countries) {
+    clearMarkup();
+    const markupList = countries
+     .map(country => {
+       return `<li class="country-list--item">
+             <img src="${country.flags.svg}" alt="${country.name.official}" width="40" height="20" /> 
+             <p>${country.name.official}</p>
+             </li>`;
+     }).join("");
+    list.innerHTML = markupList;
 };
 
-function clearAll() {
+function clearMarkup() {
   list.innerHTML = '';
   div.innerHTML = '';
 };
+
+
